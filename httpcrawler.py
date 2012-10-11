@@ -22,6 +22,9 @@ class PageResult:
         self.url = url
         soup = BeautifulSoup(body)
         self.outgoinglinks = [urljoin(url,link.get('href')).encode('utf8') for link in soup.find_all('a')]
+        self.images = [urljoin(url, image.get('src')).encode('utf8') for image in soup.find_all('img') if image.get('src')]
+        self.css = [urljoin(url, link.get('href')).encode('utf8') for link in soup.find_all('link') if u'stylesheet' == link.get('rel')]
+        self.js = [urljoin(url, script.get('src')).encode('utf8') for script in soup.find_all('script') if script.get('src')]
 
 class RedirectResult:
     def __init__(self, url, redirect):
