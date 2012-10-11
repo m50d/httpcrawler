@@ -29,10 +29,12 @@ class PageBodyParser(Protocol):
         soup = BeautifulSoup(self.buffer)
         results[self.url] = True
         newUrls = [link.get('href') for link in soup.find_all('a')]
-        [makeRequest(url) for url in newUrls if hostname == host(url) and (not url in outstandingrequests) and (not url in results) and (not urlparse(url).params)]
+        print(newUrls)
+        newRequests = [makeRequest(url) for url in newUrls if hostname == host(url) and (not url in outstandingrequests) and (not url in results) and (not urlparse(url).params)]
+        print(newRequests)
         outstandingrequests.remove(self.url)
         if(not outstandingrequests): reactor.stop() 
-        else: print(outstandingrequests)
+        else: print("Still to process: %s" % outstandingrequests)
 
 def handleResponse(response, url):
     if(301 == response.code):
