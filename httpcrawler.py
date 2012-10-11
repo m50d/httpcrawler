@@ -7,9 +7,14 @@ from twisted.web.http_headers import Headers
 from twisted.internet.protocol import Protocol
 from bs4 import BeautifulSoup
 from twisted.internet.ssl import ClientContextFactory
-from urlparse import urlparse, urljoin
+from urlparse import urlparse, urljoin, urlsplit, urlunsplit
+from pygraphviz import *
 
 def host(url): return urlparse(url).hostname
+def strip(url):
+    split = list(urlsplit(url))
+    split[4]=''
+    return urlunsplit(split)
 
 outstandingrequests = []
 
@@ -21,15 +26,21 @@ class PageResult:
     def __init__(self, url, body):
         self.url = url
         soup = BeautifulSoup(body)
-        self.outgoinglinks = [urljoin(url,link.get('href')).encode('utf8') for link in soup.find_all('a')]
+        alllinks = [strip(urljoin(url,link.get('href'))).encode('utf8') for link in soup.find_all('a')]
+        self.links = set([url for url in alllinks if hostname == host(url)])
         self.images = [urljoin(url, image.get('src')).encode('utf8') for image in soup.find_all('img') if image.get('src')]
         self.css = [urljoin(url, link.get('href')).encode('utf8') for link in soup.find_all('link') if u'stylesheet' == link.get('rel')]
         self.js = [urljoin(url, script.get('src')).encode('utf8') for script in soup.find_all('script') if script.get('src')]
+    def addSelfTo(self, graph):
+        graph.add_node(self.url)
+        for l in self.links:
+            graph.add_edge(self.url, l)
 
 class RedirectResult:
     def __init__(self, url, redirect):
         self.url = url
         self.outgoinglinks = [redirect]
+    def addSelfTo(self, graph): pass
 
 class PageBodyParser(Protocol):
     def __init__(self, url):
@@ -42,7 +53,8 @@ class PageBodyParser(Protocol):
         # Using beautifulsoup, so we'll still try and parse a page even if we got an error
         result = PageResult(self.url, self.buffer)
         results[self.url] = result
-        [makeRequest(url) for url in result.outgoinglinks if hostname == host(url) and (not url in outstandingrequests) and (not url in results) and (not urlparse(url).query)]
+        [makeRequest(url) for url in result.links if
+            (not url in outstandingrequests) and (not url in results) and (not urlparse(url).query)]
         outstandingrequests.remove(self.url)
         if(not outstandingrequests): reactor.stop() 
         else: print("Outstanding requests: %s" % outstandingrequests)
@@ -70,4 +82,8 @@ if('__main__' == __name__):
     hostname = host(sys.argv[1])
     makeRequest(sys.argv[1])
     reactor.run()
-    print(results)
+    graph = AGraph(directed=True, overlap='scale')
+    for v in results.itervalues():
+        v.addSelfTo(graph)
+    graph.draw('out.ps', prog='neato')
+
