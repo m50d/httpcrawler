@@ -19,8 +19,14 @@ agent = Agent(reactor)
 
 class PageResult:
     def __init__(self, url, body):
+        self.url = url
         soup = BeautifulSoup(body)
         self.outgoinglinks = [urljoin(url,link.get('href')).encode('utf8') for link in soup.find_all('a')]
+
+class RedirectResult:
+    def __init__(self, url, redirect):
+        self.url = url
+        self.outgoinglinks = [redirect]
 
 class PageBodyParser(Protocol):
     def __init__(self, url):
@@ -41,9 +47,10 @@ class PageBodyParser(Protocol):
 def handleResponse(response, url):
     if(301 == response.code):
         #XXX: This appears to be the correct way to get a header from the response, but it's ugly as hell
-        results[url] = True
+        redirect = response.headers.getRawHeaders('Location')[0]
+        results[url] = RedirectResult(url, redirect)
         outstandingrequests.remove(url)
-        makeRequest(response.headers.getRawHeaders('Location')[0])
+        makeRequest(redirect)
     else:
         response.deliverBody(PageBodyParser(url))
 
