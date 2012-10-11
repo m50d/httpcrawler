@@ -4,9 +4,16 @@ import sys
 from twisted.internet import reactor
 from twisted.web.client import Agent
 from twisted.web.http_headers import Headers
+from twisted.internet.protocol import Protocol
 
 results = {} #global, for now
 agent = Agent(reactor)
+
+class PageBodyParser(Protocol):
+    pass
+
+def handleResponse():
+    pass
 
 if('__main__' == __name__):
     initialurl = sys.argv[1]
