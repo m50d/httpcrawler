@@ -36,6 +36,12 @@ class PageResult:
         graph.add_node(self.url)
         for l in self.links:
             graph.add_edge(self.url, l)
+        for i in self.images:
+            graph.add_node(i, color='green')
+            graph.add_edge(self.url, i)
+        for c in self.css:
+            graph.add_node(c, color='yellow')
+            grap.add_edge(self.url, c)
 
 class RedirectResult:
     def __init__(self, url, redirect):
