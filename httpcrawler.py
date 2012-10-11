@@ -17,6 +17,11 @@ results = {} #global, for now
 
 agent = Agent(reactor)
 
+class PageResult:
+    def __init__(self, url, body):
+        soup = BeautifulSoup(body)
+        self.outgoinglinks = [urljoin(url,link.get('href')).encode('utf8') for link in soup.find_all('a')]
+
 class PageBodyParser(Protocol):
     def __init__(self, url):
         self.url = url
@@ -26,10 +31,9 @@ class PageBodyParser(Protocol):
     def connectionLost(self, reason):
         global outstandingrequests, hostname
         # Using beautifulsoup, so we'll still try and parse a page even if we got an error
-        soup = BeautifulSoup(self.buffer)
-        results[self.url] = True
-        newUrls = [urljoin(self.url,link.get('href')).encode('utf8') for link in soup.find_all('a')]
-        [makeRequest(url) for url in newUrls if hostname == host(url) and (not url in outstandingrequests) and (not url in results) and (not urlparse(url).query)]
+        result = PageResult(self.url, self.buffer)
+        results[self.url] = result
+        [makeRequest(url) for url in result.outgoinglinks if hostname == host(url) and (not url in outstandingrequests) and (not url in results) and (not urlparse(url).query)]
         outstandingrequests.remove(self.url)
         if(not outstandingrequests): reactor.stop() 
         else: print("Outstanding requests: %s" % outstandingrequests)
