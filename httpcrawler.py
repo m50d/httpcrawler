@@ -5,22 +5,29 @@ from twisted.internet import reactor
 from twisted.web.client import Agent
 from twisted.web.http_headers import Headers
 from twisted.internet.protocol import Protocol
+from bs4 import BeautifulSoup
 
 results = {} #global, for now
 agent = Agent(reactor)
 
 class PageBodyParser(Protocol):
-    pass
+    def __init__(self):
+        self.buffer = ""
+    def dataReceived(self, data):
+        self.buffer += data
+    def connectionLost(self, reason):
+        # Using beautifulsoup, so we'll still try and parse a page even if we got an error
+        soup = BeautifulSoup(self.buffer)
+        print(soup.prettify())
+        
 
-def handleResponse():
-    pass
+def handleResponse(response):
+    response.deliverBody(PageBodyParser())
 
 if('__main__' == __name__):
     initialurl = sys.argv[1]
     initialrequest = agent.request('GET', initialurl)
-    def cbResponse(ignored):
-        print('Response received')
-    initialrequest.addCallback(cbResponse)
+    initialrequest.addCallback(handleResponse)
     def cbShutdown(ignored):
         reactor.stop()
     initialrequest.addBoth(cbShutdown) 
