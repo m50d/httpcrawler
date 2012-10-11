@@ -27,7 +27,9 @@ class PageBodyParser(Protocol):
 def handleResponse(response, url):
     if(301 == response.code):
         #XXX: This appears to be the correct way to get a header from the response, but it's ugly as hell
-        makeRequest(response.headers.getRawHeaders('Location')[0])
+        otherdeferred = makeRequest(response.headers.getRawHeaders('Location')[0])
+        print(otherdeferred)
+        return otherdeferred
     else:
         response.deliverBody(PageBodyParser(url))
 
@@ -40,6 +42,6 @@ if('__main__' == __name__):
     initialrequest = makeRequest(sys.argv[1])
     def cbShutdown(ignored):
         reactor.stop()
-#    initialrequest.addBoth(cbShutdown) 
+    initialrequest.addBoth(cbShutdown) 
     reactor.run()
     print(results)
