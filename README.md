@@ -24,3 +24,4 @@ Potential improvements:
 * Separate crawling and graphing parts of the program
 * More control over which links to follow (currently follows any links on the same host)
 * More control over graphviz output (e.g. filename, format, ...)
+* Proper packaging using pip or similar
