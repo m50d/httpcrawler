@@ -94,6 +94,6 @@ if('__main__' == __name__):
     graph = AGraph(directed=True, overlap='scale')
     for v in results.itervalues():
         v.addSelfTo(graph)
-    print("Rendering graph to out.ps - this may take some time")
-    graph.draw('out.ps', prog='neato')
+    print("Rendering graph to out.svg - this may take some time")
+    graph.draw('out.svg', prog='neato')
 
