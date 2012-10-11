@@ -34,14 +34,14 @@ class PageResult:
         self.js = [urljoin(url, script.get('src')).encode('utf8') for script in soup.find_all('script') if script.get('src')]
     def addSelfTo(self, graph):
         graph.add_node(self.url)
-        for l in self.links:
-            graph.add_edge(self.url, l)
-        for i in self.images:
-            graph.add_node(i, color='green')
-            graph.add_edge(self.url, i)
-        for c in self.css:
-            graph.add_node(c, color='yellow')
-            grap.add_edge(self.url, c)
+        def addWithColor(nodes, color):
+            for n in nodes:
+                graph.add_node(n, color=color)
+                graph.add_edge(self.url, n, color=color)
+        addWithColor(self.links, 'black')
+        addWithColor(self.images, 'green')
+        addWithColor(self.css, 'yellow')
+        addWithColor(self.js, 'red')
 
 class RedirectResult:
     def __init__(self, url, redirect):
