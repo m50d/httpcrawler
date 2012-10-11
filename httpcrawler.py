@@ -30,7 +30,7 @@ class PageResult:
         alllinks = [strip(urljoin(url,link.get('href'))).encode('utf8') for link in soup.find_all('a')]
         self.links = set([url for url in alllinks if hostname == host(url)]) # Don't follow links to different hosts
         self.images = [urljoin(url, image.get('src')).encode('utf8') for image in soup.find_all('img') if image.get('src')]
-        self.css = [urljoin(url, link.get('href')).encode('utf8') for link in soup.find_all('link') if u'stylesheet' == link.get('rel')]
+        self.css = [urljoin(url, link.get('href')).encode('utf8') for link in soup.find_all('link') if [u'stylesheet'] == link.get('rel')]
         self.js = [urljoin(url, script.get('src')).encode('utf8') for script in soup.find_all('script') if script.get('src')]
     def addSelfTo(self, graph):
         graph.add_node(self.url)
