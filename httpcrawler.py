@@ -12,6 +12,7 @@ from pygraphviz import *
 
 def host(url): return urlparse(url).hostname
 def strip(url):
+    """Removes the "fragment", i.e. the part after the #, from a URL"""
     split = list(urlsplit(url))
     split[4]=''
     return urlunsplit(split)
@@ -27,7 +28,7 @@ class PageResult:
         self.url = url
         soup = BeautifulSoup(body)
         alllinks = [strip(urljoin(url,link.get('href'))).encode('utf8') for link in soup.find_all('a')]
-        self.links = set([url for url in alllinks if hostname == host(url)])
+        self.links = set([url for url in alllinks if hostname == host(url)]) # Don't follow links to different hosts
         self.images = [urljoin(url, image.get('src')).encode('utf8') for image in soup.find_all('img') if image.get('src')]
         self.css = [urljoin(url, link.get('href')).encode('utf8') for link in soup.find_all('link') if u'stylesheet' == link.get('rel')]
         self.js = [urljoin(url, script.get('src')).encode('utf8') for script in soup.find_all('script') if script.get('src')]
@@ -39,8 +40,10 @@ class PageResult:
 class RedirectResult:
     def __init__(self, url, redirect):
         self.url = url
-        self.outgoinglinks = [redirect]
-    def addSelfTo(self, graph): pass
+        self.redirect = redirect
+    def addSelfTo(self, graph):
+        graph.add_node(self.url, color='blue')
+        graph.add_edge(self.url, self.redirect) 
 
 class PageBodyParser(Protocol):
     def __init__(self, url):
@@ -85,5 +88,6 @@ if('__main__' == __name__):
     graph = AGraph(directed=True, overlap='scale')
     for v in results.itervalues():
         v.addSelfTo(graph)
+    print("Rendering graph to out.ps - this may take some time")
     graph.draw('out.ps', prog='neato')
 
