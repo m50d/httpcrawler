@@ -7,7 +7,7 @@ from twisted.web.http_headers import Headers
 from twisted.internet.protocol import Protocol
 from bs4 import BeautifulSoup
 from twisted.internet.ssl import ClientContextFactory
-from urlparse import urlparse
+from urlparse import urlparse, urljoin
 
 def host(url): return urlparse(url).hostname
 
@@ -28,9 +28,9 @@ class PageBodyParser(Protocol):
         # Using beautifulsoup, so we'll still try and parse a page even if we got an error
         soup = BeautifulSoup(self.buffer)
         results[self.url] = True
-        newUrls = [link.get('href') for link in soup.find_all('a')]
+        newUrls = [urljoin(self.url,link.get('href')).encode('utf8') for link in soup.find_all('a')]
         print(newUrls)
-        newRequests = [makeRequest(url) for url in newUrls if hostname == host(url) and (not url in outstandingrequests) and (not url in results) and (not urlparse(url).params)]
+        newRequests = [makeRequest(url) for url in newUrls if hostname == host(url) and (not url in outstandingrequests) and (not url in results) and (not urlparse(url).query)]
         print(newRequests)
         outstandingrequests.remove(self.url)
         if(not outstandingrequests): reactor.stop() 
