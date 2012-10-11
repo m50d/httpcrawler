@@ -15,7 +15,8 @@ Dependencies:
 * Pygraphviz (graph drawing)
 
 Known issues:
-* Hangs if passed an invalid URL
+* Hangs if passed an invalid URL (e.g. missing http)
+* No error handling at all if any http request fails
 * Will not follow links to query pages, but will happily follow an infinitely generated chain of "plain" links (if you have e.g. /page/1 linking to /page/2 linking to ...)
 * Redirects may or may not show up as blue nodes in the graph - untested
 
