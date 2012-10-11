@@ -29,16 +29,15 @@ class PageBodyParser(Protocol):
         soup = BeautifulSoup(self.buffer)
         results[self.url] = True
         newUrls = [urljoin(self.url,link.get('href')).encode('utf8') for link in soup.find_all('a')]
-        print(newUrls)
-        newRequests = [makeRequest(url) for url in newUrls if hostname == host(url) and (not url in outstandingrequests) and (not url in results) and (not urlparse(url).query)]
-        print(newRequests)
+        [makeRequest(url) for url in newUrls if hostname == host(url) and (not url in outstandingrequests) and (not url in results) and (not urlparse(url).query)]
         outstandingrequests.remove(self.url)
         if(not outstandingrequests): reactor.stop() 
-        else: print("Still to process: %s" % outstandingrequests)
+        else: print("Outstanding requests: %s" % outstandingrequests)
 
 def handleResponse(response, url):
     if(301 == response.code):
         #XXX: This appears to be the correct way to get a header from the response, but it's ugly as hell
+        results[url] = True
         outstandingrequests.remove(url)
         makeRequest(response.headers.getRawHeaders('Location')[0])
     else:
@@ -46,6 +45,7 @@ def handleResponse(response, url):
 
 def makeRequest(url):
     global outstandingrequests
+    print("Requesting %s" % url)
     request = agent.request('GET', url)
     request.addCallback(handleResponse, url)
     outstandingrequests.append(url)
