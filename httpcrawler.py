@@ -23,7 +23,8 @@ class PageBodyParser(Protocol):
 
 def handleResponse(response):
     if(301 == response.code):
-        print(response.headers.getRawHeaders('Location')[0])
+        #XXX: This appears to be the correct way to get a header from the response, but it's ugly as hell
+        makeRequest(response.headers.getRawHeaders('Location')[0])
     else:
         response.deliverBody(PageBodyParser())
 
