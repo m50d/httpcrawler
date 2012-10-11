@@ -22,12 +22,18 @@ class PageBodyParser(Protocol):
         
 
 def handleResponse(response):
-    response.deliverBody(PageBodyParser())
+    if(301 == response.code):
+        print(response.headers.getRawHeaders('Location')[0])
+    else:
+        response.deliverBody(PageBodyParser())
+
+def makeRequest(url):
+    request = agent.request('GET', url)
+    request.addCallback(handleResponse)
+    return request
 
 if('__main__' == __name__):
-    initialurl = sys.argv[1]
-    initialrequest = agent.request('GET', initialurl)
-    initialrequest.addCallback(handleResponse)
+    initialrequest = makeRequest(sys.argv[1])
     def cbShutdown(ignored):
         reactor.stop()
     initialrequest.addBoth(cbShutdown) 
