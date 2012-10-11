@@ -27,13 +27,15 @@ class PageBodyParser(Protocol):
         print(soup.prettify())
         outstandingrequests.remove(self.url)
         if(not outstandingrequests): reactor.stop() 
+        else: print(outstandingrequests)
 
 def handleResponse(response, url):
     if(301 == response.code):
         #XXX: This appears to be the correct way to get a header from the response, but it's ugly as hell
-        return makeRequest(response.headers.getRawHeaders('Location')[0])
+        outstandingrequests.remove(url)
+        makeRequest(response.headers.getRawHeaders('Location')[0])
     else:
-        return response.deliverBody(PageBodyParser(url))
+        response.deliverBody(PageBodyParser(url))
 
 def makeRequest(url):
     global outstandingrequests
