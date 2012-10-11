@@ -8,12 +8,9 @@ from twisted.internet.protocol import Protocol
 from bs4 import BeautifulSoup
 from twisted.internet.ssl import ClientContextFactory
 
-class WebClientContextFactory(ClientContextFactory):
-    def getContext(self, hostname, port):
-        return ClientContextFactory.getContext(self)
-
 results = {} #global, for now
-agent = Agent(reactor, WebClientContextFactory())
+
+agent = Agent(reactor)
 
 class PageBodyParser(Protocol):
     def __init__(self, url):
