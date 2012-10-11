@@ -8,6 +8,8 @@ from twisted.internet.protocol import Protocol
 from bs4 import BeautifulSoup
 from twisted.internet.ssl import ClientContextFactory
 
+outstandingrequests = []
+
 results = {} #global, for now
 
 agent = Agent(reactor)
@@ -19,29 +21,28 @@ class PageBodyParser(Protocol):
     def dataReceived(self, data):
         self.buffer += data
     def connectionLost(self, reason):
+        global outstandingrequests
         # Using beautifulsoup, so we'll still try and parse a page even if we got an error
         soup = BeautifulSoup(self.buffer)
         print(soup.prettify())
-        
+        outstandingrequests.remove(self.url)
+        if(not outstandingrequests): reactor.stop() 
 
 def handleResponse(response, url):
     if(301 == response.code):
         #XXX: This appears to be the correct way to get a header from the response, but it's ugly as hell
-        otherdeferred = makeRequest(response.headers.getRawHeaders('Location')[0])
-        print(otherdeferred)
-        return otherdeferred
+        return makeRequest(response.headers.getRawHeaders('Location')[0])
     else:
-        response.deliverBody(PageBodyParser(url))
+        return response.deliverBody(PageBodyParser(url))
 
 def makeRequest(url):
+    global outstandingrequests
     request = agent.request('GET', url)
     request.addCallback(handleResponse, url)
+    outstandingrequests.append(url)
     return request
 
 if('__main__' == __name__):
     initialrequest = makeRequest(sys.argv[1])
-    def cbShutdown(ignored):
-        reactor.stop()
-    initialrequest.addBoth(cbShutdown) 
     reactor.run()
     print(results)
