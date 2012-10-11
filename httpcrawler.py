@@ -6,9 +6,14 @@ from twisted.web.client import Agent
 from twisted.web.http_headers import Headers
 from twisted.internet.protocol import Protocol
 from bs4 import BeautifulSoup
+from twisted.internet.ssl import ClientContextFactory
+
+class WebClientContextFactory(ClientContextFactory):
+    def getContext(self, hostname, port):
+        return ClientContextFactory.getContext(self)
 
 results = {} #global, for now
-agent = Agent(reactor)
+agent = Agent(reactor, WebClientContextFactory())
 
 class PageBodyParser(Protocol):
     def __init__(self):
@@ -37,6 +42,6 @@ if('__main__' == __name__):
     initialrequest = makeRequest(sys.argv[1])
     def cbShutdown(ignored):
         reactor.stop()
-    initialrequest.addBoth(cbShutdown) 
+#    initialrequest.addBoth(cbShutdown) 
     reactor.run()
     print(results)
