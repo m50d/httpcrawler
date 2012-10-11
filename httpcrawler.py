@@ -16,7 +16,8 @@ results = {} #global, for now
 agent = Agent(reactor, WebClientContextFactory())
 
 class PageBodyParser(Protocol):
-    def __init__(self):
+    def __init__(self, url):
+        self.url = url
         self.buffer = ""
     def dataReceived(self, data):
         self.buffer += data
@@ -26,16 +27,16 @@ class PageBodyParser(Protocol):
         print(soup.prettify())
         
 
-def handleResponse(response):
+def handleResponse(response, url):
     if(301 == response.code):
         #XXX: This appears to be the correct way to get a header from the response, but it's ugly as hell
         makeRequest(response.headers.getRawHeaders('Location')[0])
     else:
-        response.deliverBody(PageBodyParser())
+        response.deliverBody(PageBodyParser(url))
 
 def makeRequest(url):
     request = agent.request('GET', url)
-    request.addCallback(handleResponse)
+    request.addCallback(handleResponse, url)
     return request
 
 if('__main__' == __name__):
